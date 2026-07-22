@@ -1,4 +1,5 @@
 import time
+from typing import Dict
 from fastapi import APIRouter, HTTPException, status
 from app.api.schemas import (
     GuardRequest,
