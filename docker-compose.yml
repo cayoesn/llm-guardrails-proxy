@@ -1,17 +1,70 @@
 version: '3.8'
 
 services:
-  guardrails-proxy:
-    build: .
-    ports:
-      - "8000:8000"
+  guardrails-postgres:
+    image: postgres:15-alpine
+    container_name: guardrails_postgres
     environment:
-      - LANGFUSE_PUBLIC_KEY=pk-lf-demo
-      - LANGFUSE_SECRET_KEY=sk-lf-demo
-      - LANGFUSE_HOST=http://localhost:3000
-      - MAX_RISK_SCORE=0.65
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: guardrailspassword
+      POSTGRES_DB: guardrails_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - guardrails_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
       timeout: 5s
-      retries: 3
+      retries: 5
+    networks:
+      - guardrails_network
+
+  guardrails-langfuse:
+    image: langfuse/langfuse:2
+    container_name: guardrails_langfuse
+    depends_on:
+      guardrails-postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:guardrailspassword@guardrails-postgres:5432/guardrails_db
+      - NEXTAUTH_SECRET=guardrailssecret
+      - NEXTAUTH_URL=http://localhost:3005
+      - SALT=guardrailssalt
+      - ENCRYPTION_KEY=0000000000000000000000000000000000000000000000000000000000000000
+      - TELEMETRY_ENABLED=false
+      - LANGFUSE_INIT_USER_EMAIL=admin@guardrails.com
+      - LANGFUSE_INIT_USER_PASSWORD=adminpassword123
+      - LANGFUSE_INIT_ORG_ID=guardrails-org
+      - LANGFUSE_INIT_ORG_NAME=Guardrails Org
+      - LANGFUSE_INIT_PROJECT_ID=guardrails-project
+      - LANGFUSE_INIT_PROJECT_NAME=Guardrails Project
+      - LANGFUSE_INIT_PROJECT_PUBLIC_KEY=pk-lf-guardrails
+      - LANGFUSE_INIT_PROJECT_SECRET_KEY=sk-lf-guardrails
+      - LANGFUSE_DISABLE_SIGNUP=true
+    ports:
+      - "3005:3000"
+    networks:
+      - guardrails_network
+
+  guardrails-proxy-app:
+    build: .
+    container_name: guardrails_proxy_app
+    ports:
+      - "8004:8000"
+    environment:
+      - ENV=production
+      - LANGFUSE_PUBLIC_KEY=pk-lf-guardrails
+      - LANGFUSE_SECRET_KEY=sk-lf-guardrails
+      - LANGFUSE_HOST=http://guardrails-langfuse:3000
+    depends_on:
+      - guardrails-langfuse
+    networks:
+      - guardrails_network
+
+networks:
+  guardrails_network:
+    driver: bridge
+
+volumes:
+  guardrails_postgres_data:
