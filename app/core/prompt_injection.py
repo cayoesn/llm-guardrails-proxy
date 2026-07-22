@@ -6,7 +6,7 @@ class PromptInjectionDetector:
     """Detector semântico e baseado em regras de ataques de Prompt Injection e Jailbreaks."""
 
     PATTERNS = [
-        (r"(?i)\bignore\s+(all\s+)?(previous|prior)\s+(instructions|prompts|rules)\b", 0.9, "IGNORE_INSTRUCTIONS"),
+        (r"(?i)\bignore\s+(all\s+)?(previous|prior|safety|system)?\s*(instructions|prompts|rules|directives)\b", 0.9, "IGNORE_INSTRUCTIONS"),
         (r"(?i)\bforget\s+(all\s+)?(safety|system|ethics)\s+(rules|prompts|guidelines)\b", 0.95, "FORGET_SAFETY"),
         (r"(?i)\b(you\s+are\s+now|act\s+as)\s+(unlocked|dan|do\s+anything\s+now|developer\s+mode|god\s+mode)\b", 0.95, "JAILBREAK_ROLEPLAY"),
         (r"(?i)\bpretend\s+(you\s+have\s+no|there\s+are\s+no)\s+(restrictions|limits|filters)\b", 0.85, "BYPASS_RESTRICTIONS"),
@@ -32,7 +32,6 @@ class PromptInjectionDetector:
                 if severity > max_score:
                     max_score = severity
 
-        # Risco marginal por repetição de caracteres suspeitos ou tamanho extremo
         if len(prompt) > 4000:
             max_score = min(1.0, max_score + 0.1)
 

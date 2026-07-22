@@ -1,5 +1,4 @@
 import logging
-import time
 from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
@@ -40,51 +39,39 @@ class GuardrailsObservability:
             return None
 
         try:
-            trace_name = "guardrails_security_check"
             status = "BLOCKED" if not security_analysis.get("is_safe") else "ALLOWED"
             
-            trace = self.client.trace(
-                name=trace_name,
-                metadata={
-                    "risk_score": security_analysis.get("risk_score"),
-                    "action": security_analysis.get("action"),
-                    "has_pii": pii_analysis.get("has_pii"),
-                    "total_masked_pii": pii_analysis.get("total_masked"),
-                    "status": status,
-                    "duration_ms": duration_ms
-                },
-                tags=["security", "guardrails", status]
-            )
-
-            # Span de Injeção de Prompt
-            trace.span(
-                name="prompt_injection_check",
-                input={"prompt_length": len(prompt)},
-                output={
-                    "is_safe": security_analysis.get("is_safe"),
-                    "risk_score": security_analysis.get("risk_score"),
-                    "threats": security_analysis.get("threats")
-                }
-            )
-
-            # Span de PII Sanitization
-            trace.span(
-                name="pii_sanitization_check",
-                input={"has_pii": pii_analysis.get("has_pii")},
-                output={
-                    "entities_count": pii_analysis.get("entities_count"),
-                    "total_masked": pii_analysis.get("total_masked")
-                }
-            )
-
-            # Registra Score de Risco de Segurança
-            trace.score(
-                name="security_risk_score",
-                value=float(security_analysis.get("risk_score", 0.0)),
-                comment=f"Threats detected: {len(security_analysis.get('threats', []))}"
-            )
-
-            return getattr(trace, "id", "demo-guard-trace-id")
+            if hasattr(self.client, "trace"):
+                trace = self.client.trace(
+                    name="guardrails_security_check",
+                    metadata={
+                        "risk_score": security_analysis.get("risk_score"),
+                        "action": security_analysis.get("action"),
+                        "has_pii": pii_analysis.get("has_pii"),
+                        "total_masked_pii": pii_analysis.get("total_masked"),
+                        "status": status,
+                        "duration_ms": duration_ms
+                    },
+                    tags=["security", "guardrails", status]
+                )
+                if hasattr(trace, "span"):
+                    trace.span(
+                        name="prompt_injection_check",
+                        input={"prompt_length": len(prompt)},
+                        output={
+                            "is_safe": security_analysis.get("is_safe"),
+                            "risk_score": security_analysis.get("risk_score"),
+                            "threats": security_analysis.get("threats")
+                        }
+                    )
+                if hasattr(trace, "score"):
+                    trace.score(
+                        name="security_risk_score",
+                        value=float(security_analysis.get("risk_score", 0.0)),
+                        comment=f"Threats detected: {len(security_analysis.get('threats', []))}"
+                    )
+                return getattr(trace, "id", "demo-guard-trace-id")
+            return "demo-guard-trace-id"
         except Exception as e:
             logger.error(f"Erro ao registrar trace de guardrails no Langfuse: {e}")
             return None
