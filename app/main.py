@@ -22,7 +22,7 @@ app.include_router(router)
 
 @app.get("/health", tags=["Health Check"])
 def health_check():
-    """Health check endpoint para monitoramento de infraestrutura."""
+    """Health check endpoint for infrastructure monitoring."""
     return {
         "status": "healthy",
         "app": settings.APP_NAME,

@@ -21,7 +21,7 @@ injection_detector = PromptInjectionDetector()
 pii_sanitizer = PIISanitizer()
 output_moderator = OutputModerator()
 
-# Contador em memória para estatísticas de auditoria
+# In-memory counter for audit statistics
 stats_store = {
     "total_inspections": 0,
     "blocked_attacks": 0,
@@ -33,15 +33,15 @@ stats_store = {
 @router.post("/guard", response_model=GuardResponse)
 def inspect_guard(req: GuardRequest) -> GuardResponse:
     """
-    Inspeciona o prompt do usuário contra injeções/jailbreaks e higieniza PII.
+    Inspects the user prompt for injections/jailbreaks and sanitizes PII.
     """
     start_time = time.time()
     stats_store["total_inspections"] += 1
 
-    # 1. Análise de Injeção de Prompt / Jailbreak
+    # 1. Prompt Injection / Jailbreak Analysis
     sec_analysis = injection_detector.analyze(req.prompt)
 
-    # 2. Sanitização de PII
+    # 2. PII Sanitization
     if req.mask_pii:
         pii_res = pii_sanitizer.sanitize(req.prompt)
     else:
@@ -60,21 +60,21 @@ def inspect_guard(req: GuardRequest) -> GuardResponse:
     else:
         stats_store["allowed_requests"] += 1
 
-    # 3. Simulação de envio para LLM se auto_forward_llm for True e for seguro
+    # 3. Simulated LLM forwarding if auto_forward_llm is True and prompt is safe
     llm_resp = None
     if sec_analysis["is_safe"] and req.auto_forward_llm:
-        raw_llm_out = f"Resposta simulada da LLM para a consulta: '{pii_res['sanitized_text']}'"
-        # 4. Moderação de saída
+        raw_llm_out = f"Simulated LLM response for query: '{pii_res['sanitized_text']}'"
+        # 4. Output moderation
         mod_res = output_moderator.moderate(raw_llm_out)
         if mod_res["is_approved"]:
-            # Reidrata PII na resposta final se aplicável
+            # Rehydrate PII in the final response if applicable
             llm_resp = pii_sanitizer.unmask(raw_llm_out, pii_res["pii_map"])
         else:
-            llm_resp = "[RESPOSTA BLOQUEADA POR VIOLAÇÃO DE POLÍTICA]"
+            llm_resp = "[RESPONSE BLOCKED DUE TO POLICY VIOLATION]"
 
     elapsed_ms = round((time.time() - start_time) * 1000, 2)
 
-    # 5. Registro de Observabilidade no Langfuse
+    # 5. Observability logging in Langfuse
     guardrails_obs.trace_guard_evaluation(
         prompt=req.prompt,
         security_analysis=sec_analysis,
@@ -98,7 +98,7 @@ def inspect_guard(req: GuardRequest) -> GuardResponse:
 @router.post("/pii/mask", response_model=PIIMaskResponse)
 def mask_pii_endpoint(req: PIIMaskRequest) -> PIIMaskResponse:
     """
-    Higieniza PIIs de um texto retornando placeholders e mapa de desofuscação.
+    Sanitizes PII from text, returning placeholders and a deanonymization map.
     """
     res = pii_sanitizer.sanitize(req.text)
     return PIIMaskResponse(
@@ -112,7 +112,7 @@ def mask_pii_endpoint(req: PIIMaskRequest) -> PIIMaskResponse:
 @router.post("/pii/unmask", response_model=PIIUnmaskResponse)
 def unmask_pii_endpoint(req: PIIUnmaskRequest) -> PIIUnmaskResponse:
     """
-    Reidrata texto substituindo placeholders pelos dados originais.
+    Rehydrates text by replacing placeholders with the original PII values.
     """
     unmasked = pii_sanitizer.unmask(req.sanitized_text, req.pii_map)
     return PIIUnmaskResponse(unmasked_text=unmasked)
@@ -120,13 +120,13 @@ def unmask_pii_endpoint(req: PIIUnmaskRequest) -> PIIUnmaskResponse:
 
 @router.get("/stats", response_model=GuardStatsResponse)
 def get_stats() -> GuardStatsResponse:
-    """Retorna estatísticas acumuladas de inspeções de segurança do proxy."""
+    """Returns accumulated security inspection statistics for the proxy."""
     return GuardStatsResponse(**stats_store)
 
 
 @router.delete("/stats")
 def reset_stats() -> Dict[str, str]:
-    """Zera as estatísticas acumuladas de auditoria."""
+    """Resets accumulated audit statistics."""
     global stats_store
     stats_store = {
         "total_inspections": 0,
@@ -134,4 +134,4 @@ def reset_stats() -> Dict[str, str]:
         "allowed_requests": 0,
         "total_pii_masked": 0
     }
-    return {"message": "Estatísticas de auditoria zeradas com sucesso."}
+    return {"message": "Audit statistics successfully reset."}

@@ -21,16 +21,16 @@ class SafetyCheckResult(BaseModel):
 
 class LlamaGuardSafetyFilter:
     """Enterprise Llama-Guard / NeMo Guardrails Content Classifier Engine.
-    
-    Aplica taxonomia de segurança de 6 categorias para verificar
-    violabilidade de termos em entradas e saídas de LLM em tempo real.
+
+    Applies a 6-category safety taxonomy to detect policy violations
+    in LLM inputs and outputs in real time.
     """
 
     UNSAFE_KEYWORDS = {
-        SafetyCategory.VIOLENCE: ["matar", "espancar", "bombas", "arma de fogo", "explodir"],
-        SafetyCategory.HATE_SPEECH: ["racista", "preconceituoso", "discriminação"],
+        SafetyCategory.VIOLENCE: ["kill", "assault", "bomb", "firearm", "detonate", "murder"],
+        SafetyCategory.HATE_SPEECH: ["racist", "bigot", "hate speech", "racial slur", "discriminate"],
         SafetyCategory.CYBERATTACKS: ["ddos", "exploit", "keylogger", "malware", "sql injection"],
-        SafetyCategory.ILLEGAL_ACTS: ["clonar cartão", "falsificar documento", "contrabando"],
+        SafetyCategory.ILLEGAL_ACTS: ["clone credit card", "forge document", "counterfeit", "smuggling"],
     }
 
     def evaluate_content(self, text: str) -> SafetyCheckResult:
@@ -50,9 +50,9 @@ class LlamaGuardSafetyFilter:
             is_safe=is_safe,
             risk_score=round(risk_score, 2),
             flagged_categories=flagged,
-            reasoning="Conteúdo aprovado nos filtros de segurança." if is_safe else f"Conteúdo violou categorias de segurança: {', '.join(flagged)}",
+            reasoning="Content passed safety filters." if is_safe else f"Content violated safety categories: {', '.join(flagged)}",
         )
 
 
-# Instância Singleton
+# Singleton instance
 llama_guard_filter = LlamaGuardSafetyFilter()

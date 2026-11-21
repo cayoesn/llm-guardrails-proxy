@@ -1,37 +1,37 @@
 # 🛡️ LLM Guardrails Proxy (Enterprise Edition)
 
-Proxy Interceptador de Segurança, Governança e Moderação para LLMs com **Single-Pass PII Sanitizer**, **Atomic Deanonymizer**, **Llama-Guard Safety Filter** e **Multi-Layer Injection Defense**.
+Security, governance, and moderation intercepting proxy for LLMs featuring a **Single-Pass PII Sanitizer**, **Atomic Deanonymizer**, **Llama-Guard Safety Filter**, and **Multi-Layer Injection Defense**.
 
 ---
 
-## 🌟 Arquitetura & Recursos Big-Tech
+## 🌟 Architecture & Enterprise Capabilities
 
 - **Single-Pass PII Sanitizer & Redaction Engine**:
-  - Compilação unificada com Named Capture Groups em uma única máquina de estados determinística:
-    $$\mathcal{O}(|T|) \quad \text{em vez de} \quad \mathcal{O}(M \times |T|)$$
-  - Elimina passes sequenciais repetidos e alocações excessivas de strings, ofuscando CPFs, E-mails, Telefones e Cartões de Crédito com consistência referencial.
+  - Unified compilation with Named Capture Groups into a single deterministic finite state machine:
+    $$\mathcal{O}(|T|) \quad \text{instead of} \quad \mathcal{O}(M \times |T|)$$
+  - Eliminates repeated sequential passes and excessive string allocations while redacting SSNs, international national IDs (e.g., Brazilian CPF), emails, phone numbers, credit cards, and API keys with referential consistency.
 - **Atomic Reversible Deanonymizer**:
-  - Reidratação atômica por regex exata ordenada por comprimento de token, imune a colisões parciais ou bugs de prefixo em placeholders.
+  - Atomic rehydration via an exact regex ordered by token length, immune to partial collisions or placeholder prefix bugs.
 - **Multi-Layer Prompt Injection & Jailbreak Defense**:
-  - Varredura de assinaturas de escape e roleplay forçado (`DAN`, `developer mode`, `ignore instructions`).
-  - **Delimiter Hijacking**: Interceptação de quebra de tags de prompt de sistema (`</system>`, `[INST]`, `<|im_start|>`).
-  - **Obfuscation Deep Inspection**: Decodificação especulativa de blocos Base64 e Hex em tempo real para prevenção de ataques esteganográficos.
+  - Scans for instruction-override signatures and forced roleplay (`DAN`, `developer mode`, `ignore instructions`).
+  - **Delimiter Hijacking**: Intercepts system-prompt tag breakouts (`</system>`, `[INST]`, `<|im_start|>`).
+  - **Obfuscation Deep Inspection**: Speculative real-time decoding of Base64 payloads to thwart steganographic and encoded attacks.
 - **Llama-Guard Safety Classifier**:
-  - Avaliação contra taxonomia estrita de 6 categorias de risco (Violência, Discurso de Ódio, Cyberattacks, Conteúdo Sexual, Atos Ilegais e PII) com bloqueio em milissegundos.
+  - Evaluates content against a strict 6-category risk taxonomy (Violence, Hate Speech, Cyberattacks, Sexual Content, Illegal Acts, and PII Leakage) with millisecond-level blocking.
 
 ---
 
-## 📊 Análise de Complexidade & Performance
+## 📊 Complexity & Performance Analysis
 
-| Mecanismo | Abordagem Anterior | Abordagem Otimizada (Staff) | Garantia |
+| Mechanism | Previous Approach | Optimized Approach (Staff) | Guarantee |
 | :--- | :--- | :--- | :--- |
-| **Sanitização PII** | $M$ passes `re.sub` sequenciais | 1 único passe unificado $\mathcal{O}(\|T\|)$ | Zero re-scans de string |
-| **Reversão (Unmask)** | `text.replace` em loop | Regex unificada atômica $\mathcal{O}(\|T\|)$ | Imunidade a colisões de substring |
-| **Inspeção de Injection** | Regex simples de texto | Heurística + Delimitadores + Decodificação Base64 | Cobertura contra ataques ofuscados |
+| **PII Sanitization** | $M$ sequential `re.sub` passes | Single unified pass $\mathcal{O}(\|T\|)$ | Zero string re-scans |
+| **Rehydration (Unmask)** | Looped `text.replace` | Unified atomic regex $\mathcal{O}(\|T\|)$ | Immune to substring collisions |
+| **Injection Inspection** | Plain-text regex only | Heuristics + Delimiters + Base64 Decoding | Coverage against obfuscated attacks |
 
 ---
 
-## 🚀 Como Executar no Docker
+## 🚀 Running with Docker
 
 ```bash
 docker compose up -d --build
@@ -39,9 +39,9 @@ docker compose up -d --build
 
 ---
 
-## 🧪 Testes Automatizados (12 Testes / 100% Hermético)
+## 🧪 Automated Tests (100% Hermetic Suite)
 
-Execução hermética da suíte de testes:
+Run the hermetic test suite with coverage:
 
 ```bash
 docker run --rm -v $(pwd):/workspace -w /workspace -e PYTHONPATH=/workspace portfolio-spec-engine:test pytest tests -v --cov=app/core

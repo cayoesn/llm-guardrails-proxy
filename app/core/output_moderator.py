@@ -3,7 +3,7 @@ from typing import Dict, Any, List
 
 
 class OutputModerator:
-    """Moderador de saída da LLM para conformidade ética e validação de vazamentos."""
+    """LLM output moderator for ethical compliance and secret-leakage validation."""
 
     MODERATION_PATTERNS = [
         (r"(?i)\b(system_prompt_secret_key|api_key_sk_\w+|ghp_\w+)\b", "SECRET_KEY_LEAK", 1.0),
@@ -14,7 +14,7 @@ class OutputModerator:
 
     def moderate(self, output_text: str) -> Dict[str, Any]:
         """
-        Valida a resposta gerada pela LLM contra regras de moderação.
+        Validates the LLM-generated response against moderation rules.
         """
         violations: List[Dict[str, Any]] = []
         max_severity = 0.0

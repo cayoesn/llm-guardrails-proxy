@@ -5,12 +5,12 @@ from typing import Dict, Any, List
 
 class PromptInjectionDetector:
     """Enterprise Multi-Layer Prompt Injection & Jailbreak Detector.
-    
-    Características Staff/Principal:
-    1. Heuristic & Semantic Pattern Matching: Detecção de comandos diretos de evasão e personificação.
-    2. Delimiter Hijacking & XML Injection: Detecção de quebra de tags de sistema (ex: </system>, [INST]).
-    3. Obfuscation & Encoding Inspection: Decodificação especulativa de payloads Base64 e Hex para
-       inspeção profunda de ataques evasivos.
+
+    Staff/Principal Engineering Characteristics:
+    1. Heuristic & Semantic Pattern Matching: Detects direct instruction-override and roleplay evasion commands.
+    2. Delimiter Hijacking & XML Injection: Detects system tag breakouts (e.g., </system>, [INST]).
+    3. Obfuscation & Encoding Inspection: Speculatively decodes Base64 payloads for
+       deep inspection of evasive attacks.
     """
 
     PATTERNS = [
@@ -27,7 +27,7 @@ class PromptInjectionDetector:
     BASE64_PATTERN = re.compile(r"\b[A-Za-z0-9+/]{20,}={0,2}\b")
 
     def _inspect_encoded_payloads(self, text: str) -> List[Dict[str, Any]]:
-        """Inspeciona se blocos Base64 contêm instruções maliciosas ocultas."""
+        """Inspects whether Base64 blocks contain hidden malicious instructions."""
         threats: List[Dict[str, Any]] = []
         for match in self.BASE64_PATTERN.finditer(text):
             b64_str = match.group(0)
@@ -46,7 +46,7 @@ class PromptInjectionDetector:
         return threats
 
     def analyze(self, prompt: str) -> Dict[str, Any]:
-        """Analisa o prompt em múltiplas camadas (texto claro, delimitadores e decodificação especulativa)."""
+        """Analyzes the prompt across multiple layers (plain text, delimiters, and speculative decoding)."""
         detected_threats: List[Dict[str, Any]] = []
         max_score = 0.0
 
@@ -59,7 +59,7 @@ class PromptInjectionDetector:
                 if severity > max_score:
                     max_score = severity
 
-        # Inspeção de ofuscação
+        # Obfuscation inspection
         obfuscated_threats = self._inspect_encoded_payloads(prompt)
         for ot in obfuscated_threats:
             detected_threats.append(ot)

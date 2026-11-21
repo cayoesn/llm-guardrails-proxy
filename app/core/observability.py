@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 
 class GuardrailsObservability:
-    """Gerenciador de Telemetria e Tracing de Segurança no Langfuse."""
+    """Security Telemetry and Tracing Manager for Langfuse."""
 
     def __init__(self) -> None:
         self.client = None
@@ -20,9 +20,9 @@ class GuardrailsObservability:
                 secret_key=settings.LANGFUSE_SECRET_KEY,
                 host=settings.LANGFUSE_HOST
             )
-            logger.info("Langfuse Observability Client inicializado no Guardrails Proxy.")
+            logger.info("Langfuse Observability Client initialized in Guardrails Proxy.")
         except Exception as e:
-            logger.warning(f"Langfuse SDK indisponível. Tracing operando em modo isolado: {e}")
+            logger.warning(f"Langfuse SDK unavailable. Tracing running in isolated mode: {e}")
             self.client = None
 
     def trace_guard_evaluation(
@@ -33,7 +33,7 @@ class GuardrailsObservability:
         duration_ms: float
     ) -> Optional[str]:
         """
-        Registra uma avaliação de segurança completa no Langfuse.
+        Records a complete security evaluation trace in Langfuse.
         """
         if not self.client:
             return None
@@ -73,7 +73,7 @@ class GuardrailsObservability:
                 return getattr(trace, "id", "demo-guard-trace-id")
             return "demo-guard-trace-id"
         except Exception as e:
-            logger.error(f"Erro ao registrar trace de guardrails no Langfuse: {e}")
+            logger.error(f"Error recording guardrails trace in Langfuse: {e}")
             return None
 
 
